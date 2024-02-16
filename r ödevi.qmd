@@ -1,0 +1,128 @@
+---
+title: "Emre Çetinkaya"
+format: html
+editor: visual
+---
+
+## *Excel dosyası import*
+
+**`read_excel`** işlevi, belirtilen dosyayı okuyarak veriyi yükler.
+
+```{r}
+library(readxl)
+veri<- read_excel("C:/Users/demre/OneDrive/Desktop/7-vdym-ilce-baznda-hanelerin-yllk-tatil-tercihleri (1).xlsx")
+View(veri)
+```
+
+# *Veri Analizi*
+
+dim fonksiyonu ile satır ve sütün değerleri gösterir.
+
+```{r}
+dim(veri)
+```
+
+özet istatistik oluşturur.
+
+```{r}
+summary(veri)
+
+```
+
+## *kayıp veri kontrolü*
+
+any(is.na(veri)) fonksiyonun FALSE vermesi , veride Boş Gözlem bulunmadğı anlamına geliyor.
+
+```{r}
+any(is.na(veri))
+
+```
+
+## *rastgele kayıp veri oluşturma*
+
+veri setindeki bazı değerleri rastgele olarak eksik (NA) değerlerle değiştirir
+
+```{r Kayıp veri olusturma}
+
+set.seed(123)
+
+satir_sayisi <- nrow(veri)
+
+eklenecek_NA_degeri <- round(satir_sayisi * 0.1)  
+
+NA_iceren_satir<- sample(1:satir_sayisi, eklenecek_NA_degeri, replace = TRUE)
+
+NA_iceren_sutun <- sample(1:ncol(veri), eklenecek_NA_degeri, replace = TRUE)
+
+veri[NA_iceren_satir, NA_iceren_sutun] <- NA
+
+```
+
+## *kayıp veri kontrolü*
+
+oluşturulan kayıp veriler kontrol edilir.
+
+```{r}
+any(is.na(veri))
+
+sum(is.na(veri))
+```
+
+kayıp verileri görebilirsiniz.
+
+```{r veri }
+
+str(veri)
+```
+
+## *Kayıp Veri Gorsellestirme*
+
+```{r}
+library(naniar)
+vis_miss(veri)
+```
+
+## *Medyan ile Kayıp veri doldurma*
+
+'imputeTS::na_mean(..., option="median")' fonksiyonu, kayıp verileri veri setindeki değişkenin medyan değeriyle doldurur.
+
+```{r kayıp veri medyan}
+
+library(imputeTS)
+
+data("veri")
+
+veri_2 <- imputeTS::na_mean(veri, option="median")
+
+sum(is.na(veri_2))
+```
+
+doldurulmuş veriler kontrol edilir.
+
+```{r}
+any(is.na(veri_2))
+
+```
+
+## *veri analizi*
+
+veri çerçevesinin özet istatistiklerini ve yapısını görüntüler, belirli bir kategorinin frekanslarını inceler.
+
+```{r}
+library(tidyverse)
+        
+summary(veri_2)
+str(veri_2)
+
+# 'diger' kategorisinin frekanslarını inceleme
+table(veri_2$diger)
+
+# 'diger' kategorisini seçilen diger değişkenlerle karşılaştırma
+veri_2 %>%
+  filter(diger != "NA") %>%
+  select(diger, Cinsiyet, Yas) %>%
+  ggplot(aes_string(x = "diger", y = "Yas", fill = "Cinsiyet")) +
+  geom_boxplot()
+
+
+```
